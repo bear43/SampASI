@@ -1,84 +1,149 @@
 ﻿// dllmain.cpp : Определяет точку входа для приложения DLL.
 #include "stdafx.h"
 
+#define DELAY_TIME 30
+
 const char* radioStation = "http://air.radiorecord.ru:8101/rr_320";//Link to a radio station
-DWORD dwBaseSampAddress = NULL;//Base address of samp.dll
-//DWORD dwBaseSampAddressOffset = 0x62DA0;//Offset in samp.dll to radio function SA-MP 0.3.7 R1
-const DWORD dwBaseSampAddressOffsetToPlayFunc = 0x661F0;//Offset in SA-MP 0.3.7 R3
-const DWORD dwBaseSampAddressOffsetToStopFunc = 0x65DF0;//Offset in SA-MP 0.3.7 R3
-const DWORD dwBaseSampAddressOffsetToReconnectDelay = 0x85E2;//Offset in SA-MP 0.3.7 R3
-bool *pInMenu = (bool*)0x26E8DC;//Offset in gta_sa.exe
 const char* one = new char(1);//Just for work. Don't know how to do another way
-bool patched = false;
 
-/*
-* Working fine, but too much assembler.
-void _stdcall startRadioPlay(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4)
+class CSamp
 {
-	if (dwBaseSampAddress == NULL) dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
-	DWORD funcAddr = dwBaseSampAddress + dwBaseSampAddressOffset;
-	_asm
+private:
+
+	/* Offset in SA-MP 0.3.7 R3 to connect delay bytes */
+	static const DWORD dwOffsetToReconnectDelay = 0x85E2;
+
+	/* Offset in SA-MP 0.3.7 to SAMP_INFO struct */
+	static const DWORD dwOffsetToSAMPINFO = 0x26E8DC;
+
+	/* Base address of samp.dll */
+	DWORD dwBaseSampAddress = NULL;
+
+	bool patched = false;
+
+public:
+	CSamp() : dwBaseSampAddress((DWORD)GetModuleHandle(L"samp.dll"))
+	{}
+
+	/* Checks base samp.dll address */
+	bool checkBaseAddress()
 	{
-		push dwUnknowParam4
-		push fVolumeLevel
-		push dwUnknownParam3
-		push dwUnknownParam2
-		push dwUnknownParam1
-		push szURL
-		mov ecx, one
-		call [funcAddr]
+		return dwBaseSampAddress;
 	}
-}*/
-/* No assembler. Working too. May be not always.*/
-void(_stdcall *pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
-void(_stdcall* pChannelStop)(char cUnknownOffset);
 
-/*Decrease reconnect timer*/
-void patchConnectDelayTimer()
+	/* Checks game state. If pointer on the struct of SAMP is null then game is not started yet */
+	bool isGameReady()
+	{
+		if (!checkBaseAddress()) return false;
+		bool *SAMPstruct = (bool*)(dwBaseSampAddress + dwOffsetToSAMPINFO);
+		return *SAMPstruct;
+	}
+
+	DWORD getBaseAddress()
+	{
+		return dwBaseSampAddress;
+	}
+
+	/* Decrease reconnect timer */
+	void patchConnectDelayTimer()
+	{
+		if (!patched)
+		{
+			unsigned char* addressToPatch = (unsigned char*)(dwBaseSampAddress + dwOffsetToReconnectDelay);
+			/* New bytes AA 00 00 00*/
+			DWORD oldProtect;
+			VirtualProtect(addressToPatch, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+			addressToPatch[1] = 0xAA;
+			addressToPatch[2] = 0x00;
+			addressToPatch[3] = 0x00;
+			addressToPatch[4] = 0x00;
+			VirtualProtect(addressToPatch, 5, oldProtect, &oldProtect);
+			patched = true;
+		}
+	}
+};
+
+class CRadio
 {
-	unsigned char* addressToPatch = (unsigned char*)(dwBaseSampAddress + dwBaseSampAddressOffsetToReconnectDelay);
-	/* New bytes AA 00 00 00*/
-	DWORD oldProtect;
-	VirtualProtect(addressToPatch, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-	addressToPatch[1] = 0xAA;
-	addressToPatch[2] = 0x00;
-	addressToPatch[3] = 0x00;
-	addressToPatch[4] = 0x00;
-	VirtualProtect(addressToPatch, 5, oldProtect, &oldProtect);
-	patched = true;
-}
+private:
+	/* Offset in SA-MP 0.3.7 R3 to radio play func */
+	static const DWORD dwOffsetToPlayFunc = 0x661F0;
+
+	/* Offset in SA-MP 0.3.7 R3 to radio stop func */
+	static const DWORD dwOffsetToStopFunc = 0x65DF0;
+
+	/* Pointer to samp.dll radio play function */
+	static void(_stdcall *pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
+
+	/* Pointer to samp.dll channel/free function */
+	static void(_stdcall* pChannelStop)(char cUnknownOffset);
+
+	shared_ptr<CSamp> pCSamp = make_shared<CSamp>();
+
+public:
+
+	CRadio(shared_ptr<CSamp> &pCSamp)
+	{
+		this->pCSamp = pCSamp;
+		pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(pCSamp->getBaseAddress() + dwOffsetToPlayFunc);
+		pChannelStop = (void(_stdcall*)(char))(pCSamp->getBaseAddress() + dwOffsetToStopFunc);
+	}
+
+	void play(const char* URL)
+	{
+		if (pStartRadioPlay != nullptr)
+		{
+			_asm push ecx
+			_asm mov ecx, one
+			pStartRadioPlay(URL, 0, 0, 0, 50.0f, 0);
+			_asm pop ecx
+		}
+	}
+
+	void play(string URL)
+	{
+		play(URL.c_str());
+	}
+
+	void stop()
+	{
+		if (pChannelStop != nullptr)
+		{
+			_asm push ecx
+			_asm mov ecx, one
+			pChannelStop(1);
+			_asm pop ecx
+		}
+	}
+};
+
+void(_stdcall *CRadio::pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4) = 0x0;
+void(_stdcall *CRadio::pChannelStop)(char cUnknownOffset) = 0x0;
 
 void check()
 {
-	if (dwBaseSampAddress == NULL)
+	shared_ptr<CSamp> samp = make_shared<CSamp>();
+	if (!samp->checkBaseAddress()) return;//Exit if no samp.dll
+	while (!samp->isGameReady())//Very bad. Bydlo code, GOVNO
 	{
-		dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
-		if (dwBaseSampAddress == NULL) return;//If no samp.dll then exit
-		pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(dwBaseSampAddress + dwBaseSampAddressOffsetToPlayFunc);
-		pChannelStop = (void(_stdcall *)(char))(dwBaseSampAddress + dwBaseSampAddressOffsetToStopFunc);
-		pInMenu += dwBaseSampAddress;
+		Sleep(150);
 	}
+	samp->patchConnectDelayTimer();//Patches delay
+	shared_ptr<CRadio> radio = make_shared<CRadio>(samp);
 	while (true)
 	{
-		if (*pInMenu && !patched)//Game not in the menu
-		{
-			patchConnectDelayTimer();
-		}
 		if (GetKeyState(VK_F3) & 0x8000)
 		{
 			if (GetKeyState(0x35) & 0x8000)
 			{
-				_asm mov ecx, one//SA-MP checks(compares with 1) [ecx] and if ecx is unreadable then fault and crash
-				pChannelStop(1);
-			
+				radio->stop();
 			}
 			else
 			{
-				_asm mov ecx, one//SA-MP checks(compares with 1) [ecx] and if ecx is unreadable then fault and crash
-				pStartRadioPlay(radioStation, 0, 0, 0, 50.0f, 0);
+				radio->play(radioStation);
 			}
 		}
-		Sleep(30);
+		Sleep(DELAY_TIME);
 	}
 }
 
