@@ -50,17 +50,16 @@ void patchConnectDelayTimer()
 
 void check()
 {
-	DWORD addrToCall = NULL;
+	if (dwBaseSampAddress == NULL)
+	{
+		dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
+		if (dwBaseSampAddress == NULL) return;//If no samp.dll then exit
+		pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(dwBaseSampAddress + dwBaseSampAddressOffsetToPlayFunc);
+		pChannelStop = (void(_stdcall *)(char))(dwBaseSampAddress + dwBaseSampAddressOffsetToStopFunc);
+		pInMenu += dwBaseSampAddress;
+	}
 	while (true)
 	{
-		if (dwBaseSampAddress == NULL)
-		{
-			dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
-			if (dwBaseSampAddress == NULL) return;//If no samp.dll then exit
-			pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(dwBaseSampAddress + dwBaseSampAddressOffsetToPlayFunc);
-			pChannelStop = (void(_stdcall *)(char))(dwBaseSampAddress + dwBaseSampAddressOffsetToStopFunc);
-			pInMenu += dwBaseSampAddress;
-		}
 		if (*pInMenu && !patched)//Game not in the menu
 		{
 			patchConnectDelayTimer();
@@ -79,7 +78,7 @@ void check()
 				pStartRadioPlay(radioStation, 0, 0, 0, 50.0f, 0);
 			}
 		}
-		Sleep(15);
+		Sleep(30);
 	}
 }
 
