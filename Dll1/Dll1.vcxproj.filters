@@ -21,10 +21,13 @@
     <ClInclude Include="targetver.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Saveable.h">
+    <ClInclude Include="FileOutput.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="FileOutput.h">
+    <ClInclude Include="FileInput.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="File.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

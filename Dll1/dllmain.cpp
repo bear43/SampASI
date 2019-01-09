@@ -1,10 +1,10 @@
 ﻿// dllmain.cpp : Определяет точку входа для приложения DLL.
 #include "stdafx.h"
-//#include "FileOutput.h"
+#include "FileOutput.h"
+#include "FileInput.h"
 
 #define DELAY_TIME 30
 
-const string radioStation = "http://air.radiorecord.ru:8101/rr_320";//Link to a radio station
 const char* one = new char(1);//Just for work. Don't know how to do another way
 
 class CSamp
@@ -17,36 +17,67 @@ private:
 	/* Offset in SA-MP 0.3.7 to SAMP_INFO struct */
 	static const DWORD dwOffsetToSAMPINFO = 0x26E8DC;
 
-	/* Base address of samp.dll */
-	DWORD dwBaseSampAddress = NULL;
+	/* Offset in SA-MP 0.3.7 to chat add func */
+	static const DWORD dwOffsetToChatAddFunc = 0x67460;
 
-	bool patched = false;
+	static const DWORD dwOffsetToChatInfo = 0x26E8C8;
+
+	/* Chat add func */
+	//static void(_stdcall *addToChat)(DWORD dwUnknownParam1, const char message[], DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
+	static void addToChat(const char message[], DWORD color)
+	{
+		DWORD funcAddress = dwBaseSampAddress + dwOffsetToChatAddFunc;
+		DWORD SAMP_CHAT_POINTER = *((DWORD*)(dwBaseSampAddress + dwOffsetToChatInfo));
+		if(funcAddress != dwOffsetToChatAddFunc)
+			_asm
+			{
+				push ecx
+				push 0
+				push color
+				push 0
+				push message
+				push 8
+				push eax
+				mov ecx, SAMP_CHAT_POINTER
+				pop eax
+				call funcAddress
+				pop ecx
+			}
+	}
+
+	/* Base address of samp.dll */
+	static DWORD dwBaseSampAddress;
+
+	static bool patched;
 
 public:
-	CSamp() : dwBaseSampAddress((DWORD)GetModuleHandle(L"samp.dll"))
-	{}
+
+	static void setBaseAddres()
+	{
+		dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
+	}
 
 	/* Checks base samp.dll address */
-	bool checkBaseAddress()
+	static bool checkBaseAddress()
 	{
 		return dwBaseSampAddress;
 	}
 
 	/* Checks game state. If pointer on the struct of SAMP is null then game is not started yet */
-	bool isGameReady()
+	static bool isGameReady()
 	{
 		if (!checkBaseAddress()) return false;
 		bool *SAMPstruct = (bool*)(dwBaseSampAddress + dwOffsetToSAMPINFO);
 		return *SAMPstruct;
 	}
 
-	DWORD getBaseAddress()
+	static DWORD getBaseAddress()
 	{
 		return dwBaseSampAddress;
 	}
 
 	/* Decrease reconnect timer */
-	void patchConnectDelayTimer()
+	static void patchConnectDelayTimer()
 	{
 		if (!patched)
 		{
@@ -59,16 +90,26 @@ public:
 			addressToPatch[3] = 0x00;
 			addressToPatch[4] = 0x00;
 			VirtualProtect(addressToPatch, 5, oldProtect, &oldProtect);
+			CSamp::sendMessage("[Decreased connection delay] Byte patched succsessful!");
 			patched = true;
 		}
 	}
+
+	/* Send message to chat */
+	static void sendMessage(string message)
+	{
+		addToChat(message.c_str(), 0xFF00FF00);
+	}
 };
 
-class CRadio : Saveable<CRadio>
+DWORD CSamp::dwBaseSampAddress = NULL;
+bool CSamp::patched = false;
+
+class CRadio
 {
 private:
 	/* Saves all radio CRadio instances */
-	static vector<CRadio*> radioStations;
+	static vector<unique_ptr<CRadio>> radioStations;
 
 	/* Offset in SA-MP 0.3.7 R3 to radio play func */
 	static const DWORD dwOffsetToPlayFunc = 0x661F0;
@@ -82,7 +123,7 @@ private:
 	/* Pointer to samp.dll channel/free function */
 	static void(_stdcall* pChannelStop)(char cUnknownOffset);
 
-	static shared_ptr<CSamp> pCSamp;
+	static const string savefile;
 
 	/* Is any radio station plays now? */
 	static bool isPlaying;
@@ -94,29 +135,9 @@ private:
 
 public:
 
-	CRadio(shared_ptr<CSamp> &pCSamp, string &URL) : URL(URL)
+	CRadio(string URL) : URL(URL), id(radioStations.size())
 	{
-		if (!this->pCSamp)
-		{
-			this->pCSamp = pCSamp;
-			pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(pCSamp->getBaseAddress() + dwOffsetToPlayFunc);
-			pChannelStop = (void(_stdcall*)(char))(pCSamp->getBaseAddress() + dwOffsetToStopFunc);
-		}
-	}
-
-	CRadio(string &URL) : URL(URL), id(radioStations.size())
-	{}
-
-	~CRadio()
-	{
-		if (!radioStations.empty())
-		{
-			auto it = find(radioStations.begin(), radioStations.end(), this);
-			if (it != radioStations.end())
-			{
-				radioStations.erase(it);
-			}
-		}
+		radioStations.emplace_back(this);
 	}
 
 	static void play(const char* URL)
@@ -148,9 +169,40 @@ public:
 		}
 	}
 
-	static vector<CRadio*>& getAllInstances()
+	static vector<unique_ptr<CRadio>>& getAllInstances()
 	{
 		return radioStations;
+	}
+
+	static void saveAllInstances()
+	{
+		FileOutput fout(savefile);
+		for (unique_ptr<CRadio>& instance : radioStations)
+		{
+			fout.save((instance->toSaveableData()), true, true, false, false);
+		}
+		fout.close();
+	}
+	
+	static void loadAllInstances()
+	{
+		stringstream ss;
+		FileInput fin(savefile, ios::in);
+		for(string& line : fin.readAllLines())
+		{
+			if (line.empty()) continue;
+			ss.str("");
+			ss << "Found radio station URL: " << line;
+			CSamp::sendMessage(ss.str());
+			CRadio *instance = new CRadio(line);
+		}
+		fin.close();
+	}
+
+	static void init()
+	{
+		pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(CSamp::getBaseAddress() + dwOffsetToPlayFunc);
+		pChannelStop = (void(_stdcall*)(char))(CSamp::getBaseAddress() + dwOffsetToStopFunc);
 	}
 
 	void play()
@@ -168,11 +220,6 @@ public:
 		this->URL = URL;
 	}
 
-	vector<CRadio*> getStations()
-	{
-		return radioStations;
-	}
-
 	string toSaveableData()
 	{
 		return URL;
@@ -187,31 +234,32 @@ public:
 
 void(_stdcall *CRadio::pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4) = 0x0;
 void(_stdcall *CRadio::pChannelStop)(char cUnknownOffset) = 0x0;
-shared_ptr<CSamp> CRadio::pCSamp = nullptr;
-vector<CRadio*> CRadio::radioStations;
+vector<unique_ptr<CRadio>> CRadio::radioStations;
 bool CRadio::isPlaying = false;
+const string CRadio::savefile = "RadioStations.txt";
 
 void check()
 {
-	shared_ptr<CSamp> samp = make_shared<CSamp>();
-	if (!samp->checkBaseAddress()) return;//Exit if no samp.dll
-	while (!samp->isGameReady())//Very bad. Bydlo code, GOVNO
+	CSamp::setBaseAddres();
+	if (!CSamp::checkBaseAddress()) return;//Exit if no samp.dll
+	while (!CSamp::isGameReady())//Very bad. Bydlo code, GOVNO
 	{
 		Sleep(150);
 	}
-	samp->patchConnectDelayTimer();//Patches delay
-	shared_ptr<CRadio> radio = make_shared<CRadio>(samp, (string&)radioStation);
+	CSamp::patchConnectDelayTimer();//Patches delay
+	CRadio::init();
+	CRadio::loadAllInstances();
 	while (true)
 	{
 		if (GetKeyState(VK_F3) & 0x8000)
 		{
 			if (GetKeyState(0x35) & 0x8000)
 			{
-				radio->stop();
+				CRadio::stop();
 			}
 			else
 			{
-				radio->play();
+				CRadio::getAllInstances()[0]->play();
 			}
 		}
 		Sleep(DELAY_TIME);
@@ -230,6 +278,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
     case DLL_PROCESS_DETACH:
+		if(!CRadio::getAllInstances().empty())
+			CRadio::saveAllInstances();
         break;
     }
     return TRUE;
