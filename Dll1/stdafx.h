@@ -12,6 +12,9 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <sstream>
+#include "Saveable.h"
 using namespace std;
 
 

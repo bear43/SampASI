@@ -1,9 +1,10 @@
 ﻿// dllmain.cpp : Определяет точку входа для приложения DLL.
 #include "stdafx.h"
+//#include "FileOutput.h"
 
 #define DELAY_TIME 30
 
-const char* radioStation = "http://air.radiorecord.ru:8101/rr_320";//Link to a radio station
+const string radioStation = "http://air.radiorecord.ru:8101/rr_320";//Link to a radio station
 const char* one = new char(1);//Just for work. Don't know how to do another way
 
 class CSamp
@@ -63,9 +64,12 @@ public:
 	}
 };
 
-class CRadio
+class CRadio : Saveable<CRadio>
 {
 private:
+	/* Saves all radio CRadio instances */
+	static vector<CRadio*> radioStations;
+
 	/* Offset in SA-MP 0.3.7 R3 to radio play func */
 	static const DWORD dwOffsetToPlayFunc = 0x661F0;
 
@@ -78,47 +82,114 @@ private:
 	/* Pointer to samp.dll channel/free function */
 	static void(_stdcall* pChannelStop)(char cUnknownOffset);
 
-	shared_ptr<CSamp> pCSamp = make_shared<CSamp>();
+	static shared_ptr<CSamp> pCSamp;
+
+	/* Is any radio station plays now? */
+	static bool isPlaying;
+
+	int id;
+
+	/* URL to radio station */
+	string URL;
 
 public:
 
-	CRadio(shared_ptr<CSamp> &pCSamp)
+	CRadio(shared_ptr<CSamp> &pCSamp, string &URL) : URL(URL)
 	{
-		this->pCSamp = pCSamp;
-		pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(pCSamp->getBaseAddress() + dwOffsetToPlayFunc);
-		pChannelStop = (void(_stdcall*)(char))(pCSamp->getBaseAddress() + dwOffsetToStopFunc);
+		if (!this->pCSamp)
+		{
+			this->pCSamp = pCSamp;
+			pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(pCSamp->getBaseAddress() + dwOffsetToPlayFunc);
+			pChannelStop = (void(_stdcall*)(char))(pCSamp->getBaseAddress() + dwOffsetToStopFunc);
+		}
 	}
 
-	void play(const char* URL)
+	CRadio(string &URL) : URL(URL), id(radioStations.size())
+	{}
+
+	~CRadio()
 	{
-		if (pStartRadioPlay != nullptr)
+		if (!radioStations.empty())
+		{
+			auto it = find(radioStations.begin(), radioStations.end(), this);
+			if (it != radioStations.end())
+			{
+				radioStations.erase(it);
+			}
+		}
+	}
+
+	static void play(const char* URL)
+	{
+		if (pStartRadioPlay != nullptr && !isPlaying)
 		{
 			_asm push ecx
 			_asm mov ecx, one
 			pStartRadioPlay(URL, 0, 0, 0, 50.0f, 0);
 			_asm pop ecx
+			isPlaying = true;
 		}
 	}
 
-	void play(string URL)
+	static void play(string URL)
 	{
 		play(URL.c_str());
 	}
 
-	void stop()
+	static void stop()
 	{
-		if (pChannelStop != nullptr)
+		if (pChannelStop != nullptr && isPlaying)
 		{
 			_asm push ecx
 			_asm mov ecx, one
 			pChannelStop(1);
 			_asm pop ecx
+			isPlaying = false;
 		}
 	}
+
+	static vector<CRadio*>& getAllInstances()
+	{
+		return radioStations;
+	}
+
+	void play()
+	{
+		play(URL);
+	}
+
+	string& getURL()
+	{
+		return URL;
+	}
+
+	void setURL(string &URL)
+	{
+		this->URL = URL;
+	}
+
+	vector<CRadio*> getStations()
+	{
+		return radioStations;
+	}
+
+	string toSaveableData()
+	{
+		return URL;
+	}
+
+	void restore(string &line)
+	{
+		setURL(line);
+	}
+
 };
 
 void(_stdcall *CRadio::pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4) = 0x0;
 void(_stdcall *CRadio::pChannelStop)(char cUnknownOffset) = 0x0;
+shared_ptr<CSamp> CRadio::pCSamp = nullptr;
+vector<CRadio*> CRadio::radioStations;
+bool CRadio::isPlaying = false;
 
 void check()
 {
@@ -129,7 +200,7 @@ void check()
 		Sleep(150);
 	}
 	samp->patchConnectDelayTimer();//Patches delay
-	shared_ptr<CRadio> radio = make_shared<CRadio>(samp);
+	shared_ptr<CRadio> radio = make_shared<CRadio>(samp, (string&)radioStation);
 	while (true)
 	{
 		if (GetKeyState(VK_F3) & 0x8000)
@@ -140,7 +211,7 @@ void check()
 			}
 			else
 			{
-				radio->play(radioStation);
+				radio->play();
 			}
 		}
 		Sleep(DELAY_TIME);
