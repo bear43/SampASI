@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
-#include "..\MemoryMeneger\Hook.h"
+#include "..\MemoryManager\Hook.h"
 
 using namespace std;
 
