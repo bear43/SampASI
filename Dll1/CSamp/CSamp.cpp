@@ -50,24 +50,23 @@ void CSamp::patchConnectDelayTimer()
 {
 	if (!patched)
 	{
-		unsigned char* addressToPatch = (unsigned char*)(dwBaseSampAddress + dwOffsetToReconnectDelay);
-		/* New bytes AA 00 00 00*/
-		DWORD oldProtect;
-		VirtualProtect(addressToPatch, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-		addressToPatch[1] = 0xAA;
-		addressToPatch[2] = 0x00;
-		addressToPatch[3] = 0x00;
-		addressToPatch[4] = 0x00;
-		VirtualProtect(addressToPatch, 5, oldProtect, &oldProtect);
+		DWORD pathAddress = dwBaseSampAddress + dwOffsetToReconnectDelay;
+		unsigned char *bytes = (unsigned char*)getBytes(pathAddress, 5);
+		bytes[1] = 0xAA;
+		bytes[2] = 0x00;
+		bytes[3] = 0x00;
+		bytes[4] = 0x00;
+		patchBytes(pathAddress, (const char*)bytes, 5);
+		free(bytes);
 		CSamp::sendMessage("[Decreased connection delay] Byte patched succsessful!");
 		patched = true;
 	}
 }
 
 /* Send message to chat */
-void CSamp::sendMessage(string message)
+void CSamp::sendMessage(string message, DWORD color)
 {
-	addToChat(message.c_str(), 0xFF00FF00);
+	addToChat(message.c_str(), color);
 }
 
 DWORD CSamp::dwBaseSampAddress = NULL;

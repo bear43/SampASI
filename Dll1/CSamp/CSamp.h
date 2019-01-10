@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include "..\MemoryMeneger\Hook.h"
 
 using namespace std;
 
@@ -44,5 +45,5 @@ public:
 	static void patchConnectDelayTimer();
 
 	/* Send message to chat */
-	static void sendMessage(string message);
+	static void sendMessage(string message, DWORD color = 0xFF00FF00);
 };

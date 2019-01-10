@@ -84,7 +84,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
@@ -152,6 +152,7 @@
     <ClCompile Include="CRadio\CRadio.cpp" />
     <ClCompile Include="CSamp\CSamp.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="GUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CRadio\CRadio.h" />
@@ -159,6 +160,10 @@
     <ClInclude Include="File\File.h" />
     <ClInclude Include="File\FileInput.h" />
     <ClInclude Include="File\FileOutput.h" />
+    <ClInclude Include="GUI.h" />
+    <ClInclude Include="MemoryMeneger\Hook.h" />
+    <ClInclude Include="MemoryMeneger\Hooker\Hooker.h" />
+    <ClInclude Include="MemoryMeneger\Patcher\Patcher.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

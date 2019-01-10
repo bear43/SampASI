@@ -3,7 +3,7 @@
 #include "File\FileInput.h"
 #include "CRadio\CRadio.h"
 
-#define DELAY_TIME 29
+constexpr auto DELAY_TIME = 30;
 
 
 void check()
