@@ -1,5 +1,4 @@
-#ifndef __HOOKER_C_
-#define __HOOKER_C_
+#pragma once
 #include "..\Patcher\Patcher.h"
 
 /*
@@ -8,8 +7,8 @@
 	hookAddress - Адрес для замены байтами прыжка - jmp destionationAddress
 	Чистим память!!!
 */
-DLL_EI char* setHook(DWORD hookAddress, DWORD destinationAddress);
+char* setHook(DWORD hookAddress, DWORD destinationAddress);
 
-DLL_EI DWORD getAddressToOriginalCode(DWORD hookAddress);
+DWORD getAddressToOriginalCode(DWORD hookAddress);
 
-#endif
+DWORD setNewPointer(DWORD address, DWORD newValue);
