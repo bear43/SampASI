@@ -39,6 +39,34 @@ HRESULT _stdcall GUI::newReset(LPDIRECT3DDEVICE9 pDevice, D3DPRESENT_PARAMETERS 
 	return result;
 }
 
+void GUI::showCursor(bool boolean)
+{
+	ShowCursor(boolean);
+}
+
+shared_ptr<RECT> GUI::freeCursor()
+{
+	shared_ptr<RECT> rectangleArea = getConfinedRectangle();
+	if (rectangleArea)
+	{
+		ClipCursor(nullptr);
+	}
+	return rectangleArea;
+}
+
+shared_ptr<RECT> GUI::getConfinedRectangle()
+{
+	shared_ptr<RECT> rectangleArea = nullptr;
+	GetClipCursor(rectangleArea.get());
+	return rectangleArea;
+}
+
+void GUI::confineCursor(shared_ptr<RECT> rectangle)
+{
+	if (!rectangle) return;
+	ClipCursor(rectangle.get());
+}
+
 void GUI::init()
 {
 	DWORD **pPointer = (DWORD**)GTA_SA_D3D9_OFFSET;
@@ -60,7 +88,17 @@ void GUI::clean()
 
 void GUI::switchShowMenu()
 {
+	static RECT s_confinedRectangle;
 	bShow = !bShow;
+	ClipCursor(nullptr);
+	/*if (bShow)
+	{
+		s_confinedRectangle = *freeCursor();
+	}
+	else
+	{
+		confineCursor(make_shared<RECT>(s_confinedRectangle));
+	}*/
 }
 
 GUI::GUI() = default;
@@ -79,4 +117,3 @@ oPresent GUI::originalPresent = nullptr;
 bool GUI::bInited = false;
 ImGuiIO GUI::io;
 bool GUI::bShow = false;
-D3DPRESENT_PARAMETERS GUI::params;

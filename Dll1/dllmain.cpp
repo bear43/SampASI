@@ -20,9 +20,9 @@ void check()
 	GUI::init();
 	while (true)
 	{
-		if (GetKeyState(VK_F3) & 0x8000)
+		if (GetAsyncKeyState(VK_F3) & 0x8000)
 		{
-			if (GetKeyState(0x35) & 0x8000)
+			if (GetAsyncKeyState(0x35) & 0x8000)
 			{
 				CRadio::stop();
 			}
@@ -32,7 +32,7 @@ void check()
 				GUI::switchShowMenu();
 			}
 		}
-		if (GetKeyState(VK_F12))
+		if (GetAsyncKeyState(VK_F12))
 		{
 			CSamp::sendMessage("Exiting from plugin");
 			break;
