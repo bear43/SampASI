@@ -18,25 +18,19 @@ void check()
 	CRadio::init();
 	CRadio::loadAllInstances();
 	GUI::init();
+	bool alreadyPressed1 = false;
 	while (true)
 	{
-		if (GetAsyncKeyState(VK_F3) & 0x8000)
+		if (!alreadyPressed1 && GetKeyState(VK_F3) & 0x8000)
 		{
-			if (GetAsyncKeyState(0x35) & 0x8000)
-			{
-				CRadio::stop();
-			}
-			else
-			{
-				CRadio::getAllInstances()[0]->play();
-				GUI::switchShowMenu();
-			}
+			GUI::switchShowMenu();
 		}
-		if (GetAsyncKeyState(VK_F12))
+		if (GetKeyState(VK_F12))
 		{
 			CSamp::sendMessage("Exiting from plugin");
 			break;
 		}
+		alreadyPressed1 = GetKeyState(VK_F3) & 0x8000;
 		Sleep(DELAY_TIME);
 	}
 	GUI::clean();

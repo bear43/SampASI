@@ -36,7 +36,7 @@ void CRadio::stop()
 	}
 }
 
-vector<unique_ptr<CRadio>>& CRadio::getAllInstances()
+vector<shared_ptr<CRadio>>& CRadio::getAllInstances()
 {
 	return radioStations;
 }
@@ -44,7 +44,7 @@ vector<unique_ptr<CRadio>>& CRadio::getAllInstances()
 void CRadio::saveAllInstances()
 {
 	FileOutput fout(savefile);
-	for (unique_ptr<CRadio>& instance : radioStations)
+	for (shared_ptr<CRadio>& instance : radioStations)
 	{
 		fout.save((instance->toSaveableData()), true, true, false, false);
 	}
@@ -99,6 +99,6 @@ void CRadio::restore(string &line)
 
 void(_stdcall *CRadio::pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4) = nullptr;
 void(_stdcall *CRadio::pChannelStop)(char cUnknownOffset) = nullptr;
-vector<unique_ptr<CRadio>> CRadio::radioStations;
+vector<shared_ptr<CRadio>> CRadio::radioStations;
 bool CRadio::isPlaying = false;
 const string CRadio::savefile = "RadioStations.txt";

@@ -8,11 +8,13 @@
 
 using namespace std;
 
+#define MAX_STATIONS 10
+
 class CRadio
 {
 private:
 	/* Saves all radio CRadio instances */
-	static vector<unique_ptr<CRadio>> radioStations;
+	static vector<shared_ptr<CRadio>> radioStations;
 
 	/* Offset in SA-MP 0.3.7 R3 to radio play func */
 	static const DWORD dwOffsetToPlayFunc = 0x661F0;
@@ -46,7 +48,7 @@ public:
 
 	static void stop();
 
-	static vector<unique_ptr<CRadio>>& getAllInstances();
+	static vector<shared_ptr<CRadio>>& getAllInstances();
 
 	static void saveAllInstances();
 
