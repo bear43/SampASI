@@ -1,8 +1,11 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include "../MemoryManager/Hooker/Hooker.h"
 
 using namespace std;
+
+typedef void(__thiscall* addMessageToChat)(void* self, DWORD dwUnknownParam1, const char *message, DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
 
 class CSamp
 {
@@ -18,6 +21,10 @@ private:
 	static const DWORD dwOffsetToChatAddFunc = 0x67460;
 
 	static const DWORD dwOffsetToChatInfo = 0x26E8C8;
+
+	static const DWORD dwOffsetToPauseMenuStatus = 0x76B964;
+
+	static addMessageToChat sampAddMessageToChat;
 
 	/* Chat add func */
 	//static void(_stdcall *addToChat)(DWORD dwUnknownParam1, const char message[], DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
@@ -44,5 +51,8 @@ public:
 	static void patchConnectDelayTimer();
 
 	/* Send message to chat */
-	static void sendMessage(string message);
+	static void sendMessage(string message, DWORD color = 0xFF00FF00);
+
+	/* Checks on entering main menu(pause) */
+	static bool isInPause();
 };

@@ -72,6 +72,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+    <SourcePath>C:\Users\Костя\source\repos\Dll1\Dll1\imgui\examples;C:\Users\Костя\source\repos\Dll1\Dll1\imgui;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -84,12 +87,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;DLL1_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,6 +156,15 @@
     <ClCompile Include="CRadio\CRadio.cpp" />
     <ClCompile Include="CSamp\CSamp.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="GUI.cpp" />
+    <ClCompile Include="imgui\examples\imgui_impl_dx9.cpp" />
+    <ClCompile Include="imgui\examples\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="MemoryManager\Hooker\Hooker.cpp" />
+    <ClCompile Include="MemoryManager\Patcher\Patcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CRadio\CRadio.h" />
@@ -159,6 +172,21 @@
     <ClInclude Include="File\File.h" />
     <ClInclude Include="File\FileInput.h" />
     <ClInclude Include="File\FileOutput.h" />
+    <ClInclude Include="GUI.h" />
+    <ClInclude Include="imgui\examples\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\examples\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="MemoryManager\Hooker\Hooker.h" />
+    <ClInclude Include="MemoryManager\Patcher\Patcher.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="imgui\examples\imgui_impl_metal.mm" />
+    <None Include="imgui\examples\imgui_impl_osx.mm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

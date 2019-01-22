@@ -8,11 +8,15 @@
 
 using namespace std;
 
+typedef void(__thiscall *pStartRadioPlay)(void *self, const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
+
+typedef void(__thiscall* pChannelStop)(void *self, char unknownParam);
+
 class CRadio
 {
 private:
 	/* Saves all radio CRadio instances */
-	static vector<unique_ptr<CRadio>> radioStations;
+	static vector<shared_ptr<CRadio>> radioStations;
 
 	/* Offset in SA-MP 0.3.7 R3 to radio play func */
 	static const DWORD dwOffsetToPlayFunc = 0x661F0;
@@ -21,10 +25,10 @@ private:
 	static const DWORD dwOffsetToStopFunc = 0x65DF0;
 
 	/* Pointer to samp.dll radio play function */
-	static void(_stdcall *pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
+	static pStartRadioPlay startRadioPlay;
 
 	/* Pointer to samp.dll channel/free function */
-	static void(_stdcall* pChannelStop)(char cUnknownOffset);
+	static pChannelStop channelStop;
 
 	static const string savefile;
 
@@ -46,7 +50,7 @@ public:
 
 	static void stop();
 
-	static vector<unique_ptr<CRadio>>& getAllInstances();
+	static vector<shared_ptr<CRadio>>& getAllInstances();
 
 	static void saveAllInstances();
 

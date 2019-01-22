@@ -2,9 +2,9 @@
 #include "File\FileOutput.h"
 #include "File\FileInput.h"
 #include "CRadio\CRadio.h"
+#include "GUI.h"
 
-#define DELAY_TIME 29
-
+constexpr auto DELAY_TIME = 30;
 
 void check()
 {
@@ -17,26 +17,27 @@ void check()
 	CSamp::patchConnectDelayTimer();//Patches delay
 	CRadio::init();
 	CRadio::loadAllInstances();
+	GUI::init();
+	bool alreadyPressed1 = false;
 	while (true)
 	{
-		if (GetKeyState(VK_F3) & 0x8000)
+		if (!CSamp::isInPause())
 		{
-			if (GetKeyState(0x35) & 0x8000)
+			if (!alreadyPressed1 && GetKeyState(VK_F3) & 0x8000)
 			{
-				CRadio::stop();
+				GUI::switchShowMenu();
 			}
-			else
+			if (GetKeyState(VK_F12))
 			{
-				CRadio::getAllInstances()[0]->play();
+				CSamp::sendMessage("Exiting from plugin");
+				break;
 			}
-		}
-		if (GetKeyState(VK_F12))
-		{
-			CSamp::sendMessage("Exiting from plugin");
-			return;
+			alreadyPressed1 = GetKeyState(VK_F3) & 0x8000;
 		}
 		Sleep(DELAY_TIME);
 	}
+	CRadio::stop();
+	GUI::clean();
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
