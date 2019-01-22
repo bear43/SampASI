@@ -8,7 +8,9 @@
 
 using namespace std;
 
-#define MAX_STATIONS 10
+typedef void(__thiscall *pStartRadioPlay)(void *self, const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
+
+typedef void(__thiscall* pChannelStop)(void *self, char unknownParam);
 
 class CRadio
 {
@@ -23,10 +25,10 @@ private:
 	static const DWORD dwOffsetToStopFunc = 0x65DF0;
 
 	/* Pointer to samp.dll radio play function */
-	static void(_stdcall *pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4);
+	static pStartRadioPlay startRadioPlay;
 
 	/* Pointer to samp.dll channel/free function */
-	static void(_stdcall* pChannelStop)(char cUnknownOffset);
+	static pChannelStop channelStop;
 
 	static const string savefile;
 

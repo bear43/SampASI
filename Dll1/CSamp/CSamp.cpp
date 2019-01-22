@@ -2,28 +2,13 @@
 
 void CSamp::addToChat(const char message[], DWORD color)
 {
-	DWORD funcAddress = dwBaseSampAddress + dwOffsetToChatAddFunc;
-	DWORD SAMP_CHAT_POINTER = *((DWORD*)(dwBaseSampAddress + dwOffsetToChatInfo));
-	if (funcAddress != dwOffsetToChatAddFunc)
-		_asm
-	{
-		push ecx
-		push 0
-		push color
-		push 0
-		push message
-		push 8
-		push eax
-		mov ecx, SAMP_CHAT_POINTER
-		pop eax
-		call funcAddress
-		pop ecx
-	}
+	if (sampAddMessageToChat != nullptr) sampAddMessageToChat((void*)(*((DWORD*)(dwBaseSampAddress + dwOffsetToChatInfo))), 8, message, 0, color, 0);
 }
 
 void CSamp::setBaseAddres()
 {
 	dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
+	if (dwBaseSampAddress != 0x0) sampAddMessageToChat = (addMessageToChat)(dwBaseSampAddress + dwOffsetToChatAddFunc);
 }
 
 /* Checks base samp.dll address */
@@ -69,5 +54,12 @@ void CSamp::sendMessage(string message, DWORD color)
 	addToChat(message.c_str(), color);
 }
 
+bool CSamp::isInPause()
+{
+	static char *gameStatus = (char*)((DWORD)GetModuleHandleA("gta_sa.exe") + dwOffsetToPauseMenuStatus);
+	return *gameStatus == 1;
+}
+
+addMessageToChat CSamp::sampAddMessageToChat = nullptr;
 DWORD CSamp::dwBaseSampAddress = NULL;
 bool CSamp::patched = false;

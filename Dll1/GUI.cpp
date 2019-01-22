@@ -9,7 +9,7 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 		ImGui::CreateContext();
 		io = &ImGui::GetIO();
 		io->MouseDrawCursor = false;
-		ImGui::StyleColorsLight();
+		ImGui::StyleColorsClassic();
 		ImGui_ImplWin32_Init(FindWindowA(NULL, "GTA:SA:MP"));
 		ImGui_ImplDX9_Init(pDevice);
 		bInited = true;
@@ -17,13 +17,15 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+	static HCURSOR cursor = LoadCursor(0, IDC_ARROW);
 	showCursor(bShow);
-	if (bShow)
+	if (bShow && !CSamp::isInPause())
 	{
-		SetCursor(LoadCursor(NULL, IDC_ARROW));
-		ImGui::Begin("Test");
+		SetCursor(cursor);
+		ImGui::Begin("Window");
 		{
 			static int choosedItem = 0;
+			static char buffer[256] = { NULL };
 			int count = CRadio::getAllInstances().size();
 			char **stations = new char*[count];
 			for (int i = 0; i < count; i++)
@@ -35,16 +37,33 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 			{
 			}
 			ImGui::PopItemWidth();
-			if (ImGui::Button("Play"))
+			if (count > 0)
 			{
-				CRadio::getAllInstances()[choosedItem]->play();
+				if (ImGui::Button("Play"))
+				{
+					CRadio::getAllInstances()[choosedItem]->play();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Stop"))
+				{
+					CRadio::stop();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Remove"))
+				{
+					CRadio::getAllInstances().erase(CRadio::getAllInstances().begin() + choosedItem);
+				}
 			}
-			ImGui::SameLine();
-			ImGui::Spacing();
-			if (ImGui::Button("Stop"))
+			ImGui::InputText("Add new station", buffer, 256);
+			if (ImGui::Button("Add"))
 			{
-				CRadio::stop();
+				if (buffer[0] != '\0')
+				{
+					new CRadio(buffer);
+					buffer[0] = '\0';
+				}
 			}
+			delete[] stations;
 		}
 		ImGui::End();
 	}

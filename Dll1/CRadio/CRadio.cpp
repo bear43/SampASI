@@ -9,12 +9,9 @@ CRadio::CRadio(string URL) : URL(URL), id(radioStations.size())
 
 void CRadio::play(const char* URL)
 {
-	if (pStartRadioPlay != nullptr && !isPlaying)
+	if (startRadioPlay != nullptr)
 	{
-		_asm push ecx
-		_asm mov ecx, one
-		pStartRadioPlay(URL, 0, 0, 0, 50.0f, 0);
-		_asm pop ecx
+		startRadioPlay((void*)one, URL, 0, 0, 0, 100.0f, 0);
 		isPlaying = true;
 	}
 }
@@ -26,12 +23,9 @@ void CRadio::play(string URL)
 
 void CRadio::stop()
 {
-	if (pChannelStop != nullptr && isPlaying)
+	if (channelStop != nullptr && isPlaying)
 	{
-		_asm push ecx
-		_asm mov ecx, one
-		pChannelStop(1);
-		_asm pop ecx
+		channelStop((void*)one, 1);
 		isPlaying = false;
 	}
 }
@@ -46,7 +40,8 @@ void CRadio::saveAllInstances()
 	FileOutput fout(savefile);
 	for (shared_ptr<CRadio>& instance : radioStations)
 	{
-		fout.save((instance->toSaveableData()), true, true, false, false);
+		if(instance != nullptr && !instance->getURL().empty())
+			fout.save((instance->toSaveableData()), true, true, false, false);
 	}
 	fout.close();
 }
@@ -68,8 +63,8 @@ void CRadio::loadAllInstances()
 
 void CRadio::init()
 {
-	pStartRadioPlay = (void(_stdcall *)(const char*, DWORD, DWORD, DWORD, const float, DWORD))(CSamp::getBaseAddress() + dwOffsetToPlayFunc);
-	pChannelStop = (void(_stdcall*)(char))(CSamp::getBaseAddress() + dwOffsetToStopFunc);
+	startRadioPlay = (pStartRadioPlay)(CSamp::getBaseAddress() + dwOffsetToPlayFunc);
+	channelStop = (pChannelStop)(CSamp::getBaseAddress() + dwOffsetToStopFunc);
 }
 
 void CRadio::play()
@@ -97,8 +92,8 @@ void CRadio::restore(string &line)
 	setURL(line);
 }
 
-void(_stdcall *CRadio::pStartRadioPlay)(const char* szURL, DWORD dwUnknownParam1, DWORD dwUnknownParam2, DWORD dwUnknownParam3, const float fVolumeLevel, DWORD dwUnknowParam4) = nullptr;
-void(_stdcall *CRadio::pChannelStop)(char cUnknownOffset) = nullptr;
+pStartRadioPlay CRadio::startRadioPlay = nullptr;
+pChannelStop CRadio::channelStop = nullptr;
 vector<shared_ptr<CRadio>> CRadio::radioStations;
 bool CRadio::isPlaying = false;
 const string CRadio::savefile = "RadioStations.txt";

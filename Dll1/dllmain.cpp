@@ -21,18 +21,22 @@ void check()
 	bool alreadyPressed1 = false;
 	while (true)
 	{
-		if (!alreadyPressed1 && GetKeyState(VK_F3) & 0x8000)
+		if (!CSamp::isInPause())
 		{
-			GUI::switchShowMenu();
+			if (!alreadyPressed1 && GetKeyState(VK_F3) & 0x8000)
+			{
+				GUI::switchShowMenu();
+			}
+			if (GetKeyState(VK_F12))
+			{
+				CSamp::sendMessage("Exiting from plugin");
+				break;
+			}
+			alreadyPressed1 = GetKeyState(VK_F3) & 0x8000;
 		}
-		if (GetKeyState(VK_F12))
-		{
-			CSamp::sendMessage("Exiting from plugin");
-			break;
-		}
-		alreadyPressed1 = GetKeyState(VK_F3) & 0x8000;
 		Sleep(DELAY_TIME);
 	}
+	CRadio::stop();
 	GUI::clean();
 }
 
