@@ -5,6 +5,14 @@
 
 using namespace std;
 
+constexpr DWORD SAMP_GAME_INFO_STRUCT_OFFSET = 0x26E8DC;
+
+enum GameState : DWORD
+{
+	CONNECTING = 1,
+	PLAYING = 5
+};
+
 typedef void(__thiscall* addMessageToChat)(void* self, DWORD dwUnknownParam1, const char *message, DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
 
 class CSamp
@@ -24,6 +32,8 @@ private:
 
 	static const DWORD dwOffsetToPauseMenuStatus = 0x76B964;
 
+	static DWORD dwOffsetToGameState;
+
 	static addMessageToChat sampAddMessageToChat;
 
 	/* Chat add func */
@@ -38,6 +48,8 @@ private:
 public:
 
 	static void setBaseAddres();
+
+	static void setGameState(DWORD state);
 
 	/* Checks base samp.dll address */
 	static bool checkBaseAddress();

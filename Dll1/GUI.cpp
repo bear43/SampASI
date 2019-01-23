@@ -63,6 +63,10 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 					buffer[0] = '\0';
 				}
 			}
+			if (ImGui::Button("Reconnect"))
+			{
+				CSamp::setGameState(GameState::CONNECTING);
+			}
 			delete[] stations;
 		}
 		ImGui::End();
