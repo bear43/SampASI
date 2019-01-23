@@ -5,6 +5,17 @@ void CSamp::addToChat(const char message[], DWORD color)
 	if (sampAddMessageToChat != nullptr) sampAddMessageToChat((void*)(*((DWORD*)(dwBaseSampAddress + dwOffsetToChatInfo))), 8, message, 0, color, 0);
 }
 
+void CSamp::setGameState(DWORD state)
+{
+	if (dwOffsetToGameState == 0x0)
+		if (dwBaseSampAddress == 0x0) return;
+		else
+			dwOffsetToGameState = *(DWORD*)(dwBaseSampAddress + SAMP_GAME_INFO_STRUCT_OFFSET) + 0x3CD;
+	setAddressProtection(dwOffsetToGameState, PAGE_READWRITE, 4);
+	*(DWORD*)(dwOffsetToGameState) = state;
+	restoreLastProtection(dwOffsetToGameState, 4);
+}
+
 void CSamp::setBaseAddres()
 {
 	dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
@@ -61,5 +72,6 @@ bool CSamp::isInPause()
 }
 
 addMessageToChat CSamp::sampAddMessageToChat = nullptr;
+DWORD CSamp::dwOffsetToGameState = 0x0;
 DWORD CSamp::dwBaseSampAddress = NULL;
 bool CSamp::patched = false;
