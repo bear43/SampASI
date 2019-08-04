@@ -308,10 +308,10 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         if (wParam > 0 && wParam < 0x10000)
             io.AddInputCharacter((unsigned short)wParam);
         return 0;
-    //case WM_SETCURSOR:
-      //  if (LOWORD(lParam) == HTCLIENT && ImGui_ImplWin32_UpdateMouseCursor())
-        //    return 1;
-        return 0;
+    case WM_SETCURSOR:
+        //if (LOWORD(lParam) == HTCLIENT && ImGui_ImplWin32_UpdateMouseCursor())
+            //return 1;
+        break;
     case WM_DEVICECHANGE:
         if ((UINT)wParam == DBT_DEVNODES_CHANGED)
             g_WantUpdateHasGamepad = true;
