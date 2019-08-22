@@ -68,6 +68,7 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 				CSamp::RestartGame();
 				CSamp::SetGameState(GameState::CONNECTING);
 			}
+			ImGui::Text("Current packet data: %s", packetData.data());
 			delete[] stations;
 		}
 		ImGui::End();
@@ -159,6 +160,14 @@ void GUI::switchShowMenu()
 	showCursor(bShow);
 }
 
+void GUI::updatePacketData(unsigned char* data, int length)
+{
+	packetData.clear();
+	for (int index = 0; index < length; index++)
+		packetData.push_back(data[index]);
+	packetData.push_back('\0');
+}
+
 GUI::GUI() = default;
 
 
@@ -177,3 +186,4 @@ oWndProc GUI::originalWndProc = nullptr;
 bool GUI::bInited = false;
 ImGuiIO *GUI::io = nullptr;
 bool GUI::bShow = false;
+vector<char> GUI::packetData;

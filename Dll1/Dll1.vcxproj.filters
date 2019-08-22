@@ -51,6 +51,9 @@
     <ClCompile Include="MemoryManager\Hooker\Hooker.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Raknet\BitStream.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="File\File.h">
@@ -99,6 +102,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="MemoryManager\Hooker\Hooker.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Raknet\RakClient.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Raknet\BitStream.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include <dinput.h>
 #include <Windows.h>
 #include <memory>
+#include <vector>
 #include "MemoryManager/Hooker/Hooker.h"
 #include "MemoryManager/Patcher/Patcher.h"
 #include "CSamp/CSamp.h"
@@ -46,11 +47,13 @@ private:
 	static bool bShow;
 	static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static oWndProc originalWndProc;
+	static vector<char> packetData;
 public:
 	static void showCursor(bool boolean);
 	static void init();
 	static void clean();
 	static void switchShowMenu();
+	static void updatePacketData(unsigned char* data, int length);
 	GUI();
 	~GUI();
 };

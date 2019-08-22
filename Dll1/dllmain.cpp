@@ -14,6 +14,8 @@ void check()
 	{
 		Sleep(150);
 	}
+	//Sleep(5000);
+	CSamp::RakPatch();
 	CSamp::patchConnectDelayTimer();//Patches delay
 	CRadio::init();
 	CRadio::loadAllInstances();

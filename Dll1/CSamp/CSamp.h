@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <string>
 #include "../MemoryManager/Hooker/Hooker.h"
+#include "../Raknet/RakClient.h"
+#include "../GUI.h"
 
 using namespace std;
 
@@ -15,6 +17,7 @@ enum GameState : DWORD
 
 typedef void(__thiscall* addMessageToChat)(void* self, DWORD dwUnknownParam1, const char *message, DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
 typedef void(__thiscall* restartGame)(void* self);
+typedef Packet*(__thiscall* SAMPReceive)(void* self);
 
 class CSamp
 {
@@ -34,9 +37,13 @@ private:
 
 	static DWORD dwOffsetToGameState;
 
+	static DWORD dwRaknetInfo;
+
 	static addMessageToChat sampAddMessageToChat;
 
 	static restartGame SAMPRestartGame;
+
+	static SAMPReceive ReceivePointerOriginal;
 
 	/* Chat add func */
 	//static void(_stdcall *addToChat)(DWORD dwUnknownParam1, const char message[], DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
@@ -47,7 +54,11 @@ private:
 
 	static bool patched;
 
+	static Packet* Receive(DWORD Unk);
+
 public:
+
+	static void RakPatch();
 
 	static void RestartGame();
 

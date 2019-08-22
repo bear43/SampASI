@@ -75,9 +75,32 @@ bool CSamp::isInPause()
 	return *gameStatus == 1;
 }
 
+void CSamp::RakPatch()
+{
+	dwRaknetInfo = (*(DWORD*)
+							((*(DWORD*)(dwBaseSampAddress + SAMP_GAME_INFO_STRUCT_OFFSET)) + 0x2C));
+	ReceivePointerOriginal = (SAMPReceive)setNewPointer((*(DWORD*)dwRaknetInfo) + 0x20, (DWORD)& Receive);
+}
+
 void CSamp::RestartGame()
 {
 	SAMPRestartGame((void*)(*(DWORD*)(dwBaseSampAddress + SAMP_GAME_INFO_STRUCT_OFFSET)));
+}
+
+Packet* CSamp::Receive(DWORD Unk)
+{
+	Packet* packet = ReceivePointerOriginal((void*)dwRaknetInfo);
+	if (packet)
+	{
+		BitStream bs(packet->data, packet->length, false);
+		char packetId;
+		bs.Read(packetId);
+		char* chars = new char[packet->length - 1];
+		bs.Read(chars, packet->length - 1);
+		GUI::updatePacketData((unsigned char*)chars, packet->length - 1);
+		delete[] chars;
+	}
+	return packet;
 }
 
 
@@ -85,4 +108,6 @@ restartGame CSamp::SAMPRestartGame = nullptr;
 addMessageToChat CSamp::sampAddMessageToChat = nullptr;
 DWORD CSamp::dwBaseSampAddress = NULL;
 DWORD CSamp::dwOffsetToGameState = 0x0;
+DWORD CSamp::dwRaknetInfo = 0x0;
+SAMPReceive CSamp::ReceivePointerOriginal = nullptr;
 bool CSamp::patched = false;

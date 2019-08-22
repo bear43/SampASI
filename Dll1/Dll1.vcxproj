@@ -165,6 +165,7 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="MemoryManager\Hooker\Hooker.cpp" />
     <ClCompile Include="MemoryManager\Patcher\Patcher.cpp" />
+    <ClCompile Include="Raknet\BitStream.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CRadio\CRadio.h" />
@@ -183,6 +184,8 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="MemoryManager\Hooker\Hooker.h" />
     <ClInclude Include="MemoryManager\Patcher\Patcher.h" />
+    <ClInclude Include="Raknet\BitStream.h" />
+    <ClInclude Include="Raknet\RakClient.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui\examples\imgui_impl_metal.mm" />
