@@ -5,7 +5,7 @@ void CSamp::addToChat(const char message[], DWORD color)
 	if (sampAddMessageToChat != nullptr) sampAddMessageToChat((void*)(*((DWORD*)(dwBaseSampAddress + dwOffsetToChatInfo))), 8, message, 0, color, 0);
 }
 
-void CSamp::setGameState(DWORD state)
+void CSamp::SetGameState(DWORD state)
 {
 	if (dwOffsetToGameState == 0x0)
 		if (dwBaseSampAddress == 0x0) return;
@@ -19,7 +19,11 @@ void CSamp::setGameState(DWORD state)
 void CSamp::setBaseAddres()
 {
 	dwBaseSampAddress = (DWORD)GetModuleHandle(L"samp.dll");
-	if (dwBaseSampAddress != 0x0) sampAddMessageToChat = (addMessageToChat)(dwBaseSampAddress + dwOffsetToChatAddFunc);
+	if (dwBaseSampAddress != 0x0)
+	{
+		sampAddMessageToChat = (addMessageToChat)(dwBaseSampAddress + dwOffsetToChatAddFunc);
+		SAMPRestartGame = (restartGame)(dwBaseSampAddress + dwOffsetToReconnectFunction);
+	}
 }
 
 /* Checks base samp.dll address */
@@ -32,7 +36,7 @@ bool CSamp::checkBaseAddress()
 bool CSamp::isGameReady()
 {
 	if (!checkBaseAddress()) return false;
-	bool *SAMPstruct = (bool*)(dwBaseSampAddress + dwOffsetToSAMPINFO);
+	bool *SAMPstruct = (bool*)(dwBaseSampAddress + SAMP_GAME_INFO_STRUCT_OFFSET);
 	return *SAMPstruct;
 }
 
@@ -67,11 +71,18 @@ void CSamp::sendMessage(string message, DWORD color)
 
 bool CSamp::isInPause()
 {
-	static char *gameStatus = (char*)((DWORD)GetModuleHandleA("gta_sa.exe") + dwOffsetToPauseMenuStatus);
+	static char* gameStatus = (char*)((DWORD)GetModuleHandleA("gta_sa.exe") + dwOffsetToPauseMenuStatus);
 	return *gameStatus == 1;
 }
 
+void CSamp::RestartGame()
+{
+	SAMPRestartGame((void*)(*(DWORD*)(dwBaseSampAddress + SAMP_GAME_INFO_STRUCT_OFFSET)));
+}
+
+
+restartGame CSamp::SAMPRestartGame = nullptr;
 addMessageToChat CSamp::sampAddMessageToChat = nullptr;
-DWORD CSamp::dwOffsetToGameState = 0x0;
 DWORD CSamp::dwBaseSampAddress = NULL;
+DWORD CSamp::dwOffsetToGameState = 0x0;
 bool CSamp::patched = false;

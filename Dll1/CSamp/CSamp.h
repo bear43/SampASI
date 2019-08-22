@@ -14,6 +14,7 @@ enum GameState : DWORD
 };
 
 typedef void(__thiscall* addMessageToChat)(void* self, DWORD dwUnknownParam1, const char *message, DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
+typedef void(__thiscall* restartGame)(void* self);
 
 class CSamp
 {
@@ -22,9 +23,6 @@ private:
 	/* Offset in SA-MP 0.3.7 R3 to connect delay bytes */
 	static const DWORD dwOffsetToReconnectDelay = 0x85E2;
 
-	/* Offset in SA-MP 0.3.7 to SAMP_INFO struct */
-	static const DWORD dwOffsetToSAMPINFO = 0x26E8DC;
-
 	/* Offset in SA-MP 0.3.7 to chat add func */
 	static const DWORD dwOffsetToChatAddFunc = 0x67460;
 
@@ -32,9 +30,13 @@ private:
 
 	static const DWORD dwOffsetToPauseMenuStatus = 0x76B964;
 
+	static const DWORD dwOffsetToReconnectFunction = 0xA1E0;
+
 	static DWORD dwOffsetToGameState;
 
 	static addMessageToChat sampAddMessageToChat;
+
+	static restartGame SAMPRestartGame;
 
 	/* Chat add func */
 	//static void(_stdcall *addToChat)(DWORD dwUnknownParam1, const char message[], DWORD dwUnknownParam2, DWORD color, DWORD dwUnknownParam3);
@@ -47,9 +49,11 @@ private:
 
 public:
 
+	static void RestartGame();
+
 	static void setBaseAddres();
 
-	static void setGameState(DWORD state);
+	static void SetGameState(DWORD state);
 
 	/* Checks base samp.dll address */
 	static bool checkBaseAddress();

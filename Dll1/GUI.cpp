@@ -65,7 +65,8 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 			}
 			if (ImGui::Button("Reconnect"))
 			{
-				CSamp::setGameState(GameState::CONNECTING);
+				CSamp::RestartGame();
+				CSamp::SetGameState(GameState::CONNECTING);
 			}
 			delete[] stations;
 		}
