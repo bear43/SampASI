@@ -26,6 +26,7 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 		{
 			static int choosedItem = 0;
 			static char buffer[256] = { NULL };
+			static char timerBuffer[10] = { NULL };
 			int count = CRadio::getAllInstances().size();
 			char **stations = new char*[count];
 			for (int i = 0; i < count; i++)
@@ -68,7 +69,19 @@ HRESULT _stdcall GUI::newEndScene(LPDIRECT3DDEVICE9 pDevice)
 				CSamp::RestartGame();
 				CSamp::SetGameState(GameState::CONNECTING);
 			}
-			ImGui::Text("Current packet data: %s", packetData.data());
+			ImGui::Text("Incoming dialog data: %s", InData.data());
+			ImGui::Text("Outcoimg dialog data: %s", OutData.data());
+			ImGui::InputText("Timing", timerBuffer, 10);
+			if (ImGui::Button("Flood"))
+			{
+				if (CSamp::GetFloodState())
+					CSamp::KillNewsFlood();
+				else
+				{
+					CSamp::SetFloodTiming(std::atoi(timerBuffer));
+					CSamp::StartNewsFlood();
+				}
+			}
 			delete[] stations;
 		}
 		ImGui::End();
@@ -160,12 +173,20 @@ void GUI::switchShowMenu()
 	showCursor(bShow);
 }
 
-void GUI::updatePacketData(unsigned char* data, int length)
+void GUI::UpdateInputDialogData(unsigned char* data, int length)
 {
-	packetData.clear();
+	InData.clear();
 	for (int index = 0; index < length; index++)
-		packetData.push_back(data[index]);
-	packetData.push_back('\0');
+		InData.push_back(data[index]);
+	InData.push_back('\0');
+}
+
+void GUI::UpdateOutputDialogData(unsigned char* data, int length)
+{
+	OutData.clear();
+	for (int index = 0; index < length; index++)
+		OutData.push_back(data[index]);
+	OutData.push_back('\0');
 }
 
 GUI::GUI() = default;
@@ -186,4 +207,5 @@ oWndProc GUI::originalWndProc = nullptr;
 bool GUI::bInited = false;
 ImGuiIO *GUI::io = nullptr;
 bool GUI::bShow = false;
-vector<char> GUI::packetData;
+vector<char> GUI::InData;
+vector<char> GUI::OutData;

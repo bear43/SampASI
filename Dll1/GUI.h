@@ -47,13 +47,15 @@ private:
 	static bool bShow;
 	static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	static oWndProc originalWndProc;
-	static vector<char> packetData;
+	static vector<char> InData;
+	static vector<char> OutData;
 public:
 	static void showCursor(bool boolean);
 	static void init();
 	static void clean();
 	static void switchShowMenu();
-	static void updatePacketData(unsigned char* data, int length);
+	static void UpdateInputDialogData(unsigned char* data, int length);
+	static void UpdateOutputDialogData(unsigned char* data, int length);
 	GUI();
 	~GUI();
 };
